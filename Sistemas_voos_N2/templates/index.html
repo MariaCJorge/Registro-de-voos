@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Algoritmos de buscas - Voos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/aviao.png') }}">
+</head>
+<body class="big-light">
+
+<div class="container mt-5">
+
+    <header class="text-center mb-5 p-4 bg-white rounded shadow-sm">
+        <h1 class="display-4 text-primary">✈️ Análise de Algoritmos de buscas - Voos</h1>
+        <p class="lead">Comparação de desempenho: Sequencial, Indexada e HashMap</p>
+        <hr>
+        <div class="row">
+            <div class="col-md-4"><strong>Matéria:</strong> Algoritmo e Estrutura de dados 2</div>
+            <div class="col-md-4"><strong>Professora:</strong> Dana Tomazett</div>
+            <div class="col-md-4"><strong>Aluno:</strong> Maria Eduarda da Costa Jorge</div>
+        </div>
+    </header>
+
+    <div class="card-body">
+
+    <h5 class="mb-3">Primeiros 10 registros com Número de Voo distinto</h5>
+    <table class="table table-striped table-hover mb-4">
+        <thead class="table-primary">
+            <tr>
+                {% for col in first_100[0].keys() %}
+                    <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in first_100 %}
+            <tr>
+                {% for val in row.values() %}
+                <td>{{ val }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+
+    <div class="card shadow-lg mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0">Resultados da Comparação do Tempo</h2>
+        </div>
+        <div class="card-body">
+                            <form id="search-form" class="mb-3">
+                    <div class="input-group mb-2">
+                        <input type="text" id="search-key" class="form-control" placeholder="Digite o Número do Voo..." value="{{ search_key }}">
+                    </div>
+                    <div class="input-group mb-2">
+                        <select id="search-type" class="form-select">
+                            <option value="sequencial">Sequencial (MySQL)</option>
+                            <option value="indexada">Indexada (MySQL com Índice)</option>
+                            <option value="hash">Hash (Memória Python)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </form>
+
+
+            <div id="results-area">
+                <p class="text-center text-muted">Aguardando a execução de busca...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$('#search-form').on('submit', function(e) {
+    e.preventDefault();
+    const search_key = $('#search-key').val();
+    const search_type = $('#search-type').val(); // novo
+
+    $('#results-area').html('<p class="text-center text-muted">Buscando...</p>');
+
+    $.ajax({
+        url: '/search',
+        type: 'POST',
+        data: { 
+            'search_key': search_key,
+            'search_type': search_type
+        },
+       success: function(response) {
+    let html_content = `
+        <p class="alert alert-info">Tempo de execução para a chave: <strong>${response.chave_buscada}</strong></p>
+        <p><strong>Tipo de Busca:</strong> ${response.tipo} | <strong>Tempo:</strong> ${response.tempo}</p>
+    `;
+
+    html_content += `<table class="table table-striped table-hover mt-3"><thead class="table-primary"><tr>`;
+    for (let col in response.registro) {
+        html_content += `<th>${col}</th>`;
+    }
+    html_content += `</tr></thead><tbody><tr>`;
+    for (let col in response.registro) {
+        html_content += `<td>${response.registro[col]}</td>`;
+    }
+    html_content += `</tr></tbody></table>`;
+
+    $('#results-area').html(html_content);
+}
+,
+        error: function () {
+            $('#results-area').html('<p class="alert alert-danger">Erro ao processar a busca. Tente novamente.</p>');
+        }
+    });
+});
+
+</script>
+
+</body>
+</html>
